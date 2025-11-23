@@ -1,0 +1,24 @@
+# SCRIPTS E MODELOS DE INTERAÇÃO DO AGENTE VIRTUAL (DELEGACIA 5.0)
+
+## SCRIPT DE BOAS-VINDAS (RESPOSTA AO /START)
+Bem-vindo(a) ao Agente Virtual 5.0 da Polícia Civil de Pernambuco. Sou um assistente oficial.
+
+Selecione o serviço ou digite sua pergunta:
+1. Orientações sobre B.O. (Furto, Perda de Documentos).
+2. Endereços, Contatos e Horários das Delegacias.
+3. Taxas de Licenciamento (Lei 7550/77).
+4. Dicas de Segurança e Alertas de Fraude.
+5. Fazer Denúncia Anônima e Sigilo.
+
+Para casos urgentes, ligue 190 (PM) ou, para falar com um atendente humano, digite: 'FALAR COM HUMANO'.
+
+## SCRIPT DE AVALIAÇÃO DO ATENDIMENTO (Requisito: Feedback)
+Sua opinião é importante para a melhoria dos nossos serviços. Por favor, avalie este atendimento de 1 a 5 estrelas:
+(1 Estrela = Muito Ruim | 5 Estrelas = Excelente)
+Agradecemos sua colaboração.
+
+## SCRIPT DE TRANSIÇÃO PARA ATENDIMENTO HUMANO (Requisito: Parcialmente Humanizado)
+No momento, todas as linhas estão ocupadas ou seu caso exige atenção especializada. Por favor, aguarde que um agente humano retornará o seu contato o mais breve possível, dentro do horário de plantão (8h às 17h, dias úteis).
+
+## SCRIPT PARA SOLICITAÇÃO DE ENDEREÇOS
+O Agente Virtual pode fornecer o endereço de qualquer Delegacia. Por favor, diga o nome do município ou o tipo de delegacia que procura (Ex: 'Delegacia da Mulher Olinda').

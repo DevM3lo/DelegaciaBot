@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+langchain-ollama
+faiss-cpu
+pypdf
+google-generativeai
