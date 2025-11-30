@@ -41,10 +41,10 @@ def startup_event():
 
     # --- CONFIGURAÇÃO DA MEMÓRIA (OLLAMA LOCAL) ---
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="embedding-001",  # Este é o nome que a biblioteca Google usa historicamente
+        model="models/text-embedding-004", # Incluindo o prefixo exigido
         api_key=os.environ.get("GOOGLE_API_KEY")
     )
-
+    
     # Carrega banco de dados
     if os.path.exists(PASTA_DB) and os.path.exists(f"{PASTA_DB}/index.faiss"):
         print(">>> Carregando memória do disco...")
