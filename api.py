@@ -126,3 +126,7 @@ Digite sua dúvida abaixo:"""
         print(f"Erro no processamento: {e}")
 
     return {"status": "ok"}
+
+@app.get("/")
+def health_check():
+    return {"status": "Estou vivo e rodando 24/7!", "servico": "Delegacia Bot"}
