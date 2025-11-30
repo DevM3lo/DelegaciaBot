@@ -7,5 +7,4 @@ langchain-ollama
 faiss-cpu
 pypdf
 google-generativeai
-# a! `-`
-#FODASE, UPA ESSA MERDA LOGO GIT MALDIDO
+# TESTE
