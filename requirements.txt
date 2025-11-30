@@ -1,8 +1,11 @@
 fastapi
 uvicorn
-langchain
-langchain-community
-langchain-core
+# Estabilidade do LangChain Core (Versão testada e mais compatível)
+langchain-core==0.2.14
+# O LangChain Community precisa de uma versão compatível
+langchain-community==0.1.18
+
+# Módulos específicos (deixar o pip resolver as versões mais novas)
 langchain-google-genai
 langchain-ollama
 faiss-cpu
