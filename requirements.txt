@@ -7,3 +7,4 @@ langchain-ollama
 faiss-cpu
 pypdf
 google-generativeai
+# a! `-`
