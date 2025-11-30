@@ -1,111 +1,128 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, Request, HTTPException
 import os
+import requests
+import json
 
-# --- IMPORTAÇÕES CORRETAS ---
+# --- IMPORTAÇÕES DO CÉREBRO ---
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
 
-# --- SUA CHAVE AQUI ---
-# Cole sua chave dentro das aspas abaixo:
-os.environ["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
+# --- CONFIGURAÇÕES ---
+# Pega as chaves do ambiente (Render)
+os.environ["GOOGLE_API_KEY"] = os.environ.get("GEMINI_API_KEY")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN") # Nova variável necessária!
 
-app = FastAPI(title="API Delegacia 5.0", version="Final")
+app = FastAPI(title="Bot Delegacia 5.0 - Telegram Edition", version="Final")
 PASTA_DOCS = "docs"
 PASTA_DB = "faiss_index"
-
-class PerguntaRequest(BaseModel):
-    texto: str
 
 vector_store = None
 llm = None
 
+# --- INICIALIZAÇÃO (Igual ao anterior) ---
 @app.on_event("startup")
 def startup_event():
     global vector_store, llm
-    print(">>> Inicializando Cérebro (Modo Nuvem)...")
+    print(">>> Inicializando Cérebro 24/7...")
     
-    # --- CONFIGURAÇÃO DO MODELO (O ESCOLHIDO DA LISTA) ---
-    # Usando o gemini-2.0-flash que apareceu na sua lista
+    # 1. Configura Gemini (Chat)
     try:
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.0-flash", 
             temperature=0.2,
             convert_system_message_to_human=True
         )
-        print(">>> Modelo Gemini 2.0 Flash conectado!")
-    except Exception as e:
-        print(f"Erro ao conectar no Google: {e}")
+    except:
+        print("Erro ao conectar Gemini Chat")
 
-    # --- CONFIGURAÇÃO DA MEMÓRIA (OLLAMA LOCAL) ---
+    # 2. Configura Embeddings (Google)
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/text-embedding-004", # Incluindo o prefixo exigido
+        model="models/text-embedding-004", 
         api_key=os.environ.get("GOOGLE_API_KEY")
     )
-    
-    # Carrega banco de dados
-    if os.path.exists(PASTA_DB) and os.path.exists(f"{PASTA_DB}/index.faiss"):
-        print(">>> Carregando memória do disco...")
-        vector_store = FAISS.load_local(PASTA_DB, embeddings, allow_dangerous_deserialization=True)
-    
-    elif os.path.exists(PASTA_DOCS) and os.listdir(PASTA_DOCS):
-        print(">>> Indexando arquivos da pasta 'docs'...")
+
+    # 3. Carrega Memória
+    if os.path.exists(PASTA_DOCS):
+        print(">>> Indexando documentos...")
         docs = []
-        # Lê TXT
         try:
-            loader_txt = DirectoryLoader(PASTA_DOCS, glob="*.txt", loader_cls=TextLoader, loader_kwargs={'encoding': 'utf-8'})
-            docs.extend(loader_txt.load_and_split())
+            loader = DirectoryLoader(PASTA_DOCS, glob="*.txt", loader_cls=TextLoader, loader_kwargs={'encoding': 'utf-8'})
+            docs.extend(loader.load_and_split())
         except: pass
         
-        # Lê PDF
-        try:
-            loader_pdf = DirectoryLoader(PASTA_DOCS, glob="*.pdf", loader_cls=PyPDFLoader)
-            docs.extend(loader_pdf.load_and_split())
-        except: pass
-
         if docs:
             vector_store = FAISS.from_documents(docs, embeddings)
-            vector_store.save_local(PASTA_DB)
-            print(f">>> Indexação concluída com {len(docs)} trechos!")
+            print(f">>> Memória carregada com {len(docs)} trechos!")
         else:
-            print(">>> AVISO: Pasta 'docs' vazia.")
+            print(">>> AVISO: Nenhum documento lido.")
 
-@app.post("/perguntar")
-async def perguntar(request: PerguntaRequest):
+# --- LÓGICA DE RAG (Função auxiliar) ---
+def gerar_resposta_rag(pergunta_usuario):
     if not vector_store:
-        raise HTTPException(status_code=503, detail="Base de dados não carregada.")
+        return "Desculpe, meu sistema está reiniciando. Tente em 1 minuto."
     
-    # 1. Busca na memória local
-    docs = vector_store.similarity_search(request.texto, k=4)
+    docs = vector_store.similarity_search(pergunta_usuario, k=4)
     contexto = "\n\n".join([d.page_content for d in docs])
     
-    # 2. Prepara o Prompt
     template = """
     Você é o Agente Virtual da Polícia Civil de Pernambuco (Delegacia 5.0).
-    Sua única função é fornecer informações oficiais, sem dar opiniões.
-
-    REGRAS DE RESPOSTA:
-    1. Seja extremamente conciso, formal e direto.
-    2. Responda apenas com base no CONTEXTO OFICIAL.
-    3. Para perguntas sobre valores/taxas, cite o código e o valor.
-    4. Para perguntas sobre crime, priorize a orientação de segurança (não reagir) e o procedimento (presencial/online).
+    Responda com base APENAS no contexto abaixo. Seja formal e cite valores/leis.
     
-    CONTEXTO OFICIAL:
-    {contexto}
-    
-    PERGUNTA DO CIDADÃO:
-    {pergunta}
-    
+    CONTEXTO: {contexto}
+    PERGUNTA: {pergunta}
     RESPOSTA:"""
     
-    prompt_final = template.format(contexto=contexto, pergunta=request.texto)
-    
-    # 3. Pergunta para o Google
+    prompt = template.format(contexto=contexto, pergunta=pergunta_usuario)
     try:
-        print(f"Processando: {request.texto}")
-        resposta = llm.invoke(prompt_final)
-        return {"resposta": resposta.content}
+        res = llm.invoke(prompt)
+        return res.content
+    except:
+        return "Erro temporário na IA. Tente novamente."
+
+# --- ENDPOINT DO TELEGRAM (Onde a mágica acontece) ---
+@app.post("/webhook/telegram")
+async def telegram_webhook(request: Request):
+    # 1. Lê o pacotão do Telegram
+    data = await request.json()
+    
+    try:
+        # 2. Extrai quem mandou e o que mandou
+        message = data.get("message", {})
+        chat_id = message.get("chat", {}).get("id")
+        texto_usuario = message.get("text", "")
+
+        if not chat_id or not texto_usuario:
+            return {"status": "ignored"} # Não foi mensagem de texto
+
+        print(f"Mensagem recebida de {chat_id}: {texto_usuario}")
+
+        # 3. Lógica de Comandos (/start) vs Pergunta
+        if texto_usuario == "/start":
+            resposta_final = """Bem-vindo à Delegacia Virtual 5.0 da PCPE.
+            
+Sou um assistente oficial automatizado. Posso informar sobre:
+1. Taxas e Licenciamento (Lei 7550/77)
+2. Como registrar Boletim de Ocorrência
+3. Endereços de Delegacias
+4. Dicas de Segurança
+
+Digite sua dúvida abaixo:"""
+        else:
+            # Chama a IA
+            resposta_final = gerar_resposta_rag(texto_usuario)
+
+        # 4. Envia a resposta de volta para o Telegram
+        url_envio = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": resposta_final,
+            "parse_mode": "Markdown"
+        }
+        requests.post(url_envio, json=payload)
+
     except Exception as e:
-        return {"resposta": "Erro na comunicação com a IA.", "erro_tecnico": str(e)}
+        print(f"Erro no processamento: {e}")
+
+    return {"status": "ok"}
