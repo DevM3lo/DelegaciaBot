@@ -1,58 +1,71 @@
-# 🇧🇷 Projeto Delegacia 5.0: Chatbot Humanizado para PCPE
+# 👮 Delegacia 5.0 - Assistente Virtual Inteligente (PCPE)
 
-## 🎯 Visão Geral do Projeto
+> **Projeto Acadêmico - Categoria B: Sistema de Chatbot e Triagem de Atendimento**
 
-Este projeto consiste no desenvolvimento e implementação de um **Assistente Virtual Híbrido** para a Polícia Civil de Pernambuco (PCPE). O objetivo é modernizar o atendimento, fornecendo informações instantâneas sobre serviços, legislação e procedimentos, reduzindo a sobrecarga nas delegacias presenciais.
+[![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Gemini AI](https://img.shields.io/badge/AI-Google%20Gemini%202.0-orange?style=for-the-badge&logo=google)](https://ai.google.dev/)
+[![Status](https://img.shields.io/badge/Status-Online%2024%2F7-brightgreen?style=for-the-badge)]()
 
-O sistema atende integralmente ao requisito de **Conformidade com a LGPD** e à preferência por **Tecnologias Open Source** (Ollama/FAISS) em conjunto com uma solução **Cloud-Native** (Gemini API) para garantir estabilidade e alta performance.
+---
 
-## ⚙️ Arquitetura do Sistema (Hybrid RAG)
+## 🎯 Visão Geral
 
-O projeto utiliza uma arquitetura de Geração Aumentada por Recuperação (RAG) para garantir que as respostas sobre leis e procedimentos sejam factuais e baseadas **apenas** na base de conhecimento oficial (os arquivos `.txt` na pasta `docs`).
+O **Delegacia 5.0** é um chatbot de atendimento ao cidadão desenvolvido para a **Polícia Civil de Pernambuco (PCPE)**. O sistema utiliza Inteligência Artificial Generativa (LLM) com a técnica **RAG (Retrieval-Augmented Generation)** para fornecer informações precisas, contextuais e jurídicas sobre serviços policiais, sem alucinações.
 
-| Componente | Função | Tecnologia Específica |
+O objetivo é reduzir filas presenciais e oferecer triagem imediata para serviços como Registro de B.O., taxas de licenciamento e denúncias anônimas.
+
+### 🔗 Teste Agora (Live Demo)
+Acesse o bot diretamente no Telegram:
+👉 **[t.me/DelegaciaAdmin_bot](https://t.me/DelegaciaAdmin_bot)**
+
+---
+
+## ⚙️ Arquitetura Técnica
+
+O projeto foi migrado de uma solução local para uma arquitetura **Serverless/Cloud** para garantir disponibilidade 24/7.
+
+| Componente | Tecnologia | Função |
 | :--- | :--- | :--- |
-| **Orquestração** | Gerencia o fluxo de conversa e a conexão com canais externos (Telegram/WhatsApp). | **n8n** (Docker) |
-| **Cérebro (LLM)** | Gera a resposta final, com alta velocidade e inteligência. | **Google Gemini 2.0 Flash** (API Cloud) |
-| **Memória (Vector DB)** | Armazena a Lei 7550/77 e os procedimentos em formato vetorial. | **FAISS** (índice) |
-| **Embeddings** | Transforma texto em vetores para busca semântica. | **Ollama** (`nomic-embed-text` local) |
+| **Backend API** | **Python (FastAPI)** | Gerencia webhooks, lógica de negócios e conexão com IA. |
+| **Inteligência** | **Google Gemini 2.0 Flash** | Processamento de Linguagem Natural (NLP) de alta velocidade. |
+| **Memória (RAG)** | **FAISS + LangChain** | Banco de dados vetorial local para indexar leis e procedimentos. |
+| **Embeddings** | **Google GenAI Embeddings** | Vetorização de alta performance na nuvem. |
+| **Interface** | **Telegram Bot API** | Interface de usuário acessível e mobile-first. |
+| **Hospedagem** | **Render (Cloud)** | Deploy contínuo via GitHub com monitoramento de uptime. |
 
-## ✅ Requisitos de Execução
+---
 
-Para rodar o projeto em um novo ambiente, é necessário ter instalado e configurado:
+## 📚 Base de Conhecimento (Escopo de Atendimento)
 
-1.  **Python 3.11** (com ambiente virtual `venv` ativado).
-2.  **Docker Desktop** (para rodar o n8n de forma isolada).
-3.  **Ollama CLI** (para gerenciar os modelos de embeddings locais).
-4.  **ngrok** (para criar o túnel HTTPS público para o Telegram).
-5.  **Chave Gemini API** (Definida como variável de ambiente `GEMINI_API_KEY`).
-6.  **Token do Bot do Telegram** (Obtido via @BotFather).
+O robô foi treinado com documentos oficiais (localizados na pasta `/docs`) para responder sobre:
 
-## 🚀 Guia de Setup e Execução (Passo a Passo)
+* 📜 **Legislação:** Tabela de taxas e licenciamento (Lei 7550/77).
+* 🚨 **Procedimentos:** Diferença legal entre Furto e Roubo; orientações para B.O. Online.
+* 📍 **Localização:** Endereços e contatos de delegacias especializadas (Mulher, Turista, DHPP).
+* 🛡️ **Prevenção:** Dicas de segurança pública e alertas contra golpes digitais.
+* ⭐ **Feedback:** Sistema de avaliação de atendimento integrado.
 
-Siga este guia em 4 passos. Certifique-se de estar na pasta raiz do projeto com o `venv` ativado.
+---
 
-### 1. Preparação da Base de Conhecimento e Variáveis
+## 🚀 Como Rodar Localmente (Desenvolvimento)
 
-1.  **Defina sua Chave Gemini:**
-    ```bash
-    $env:GEMINI_API_KEY="SUA_CHAVE_AQUI"
-    ```
-2.  **Instale as Dependências:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Baixe os Modelos Ollama (Embeddings):**
-    ```bash
-    ollama pull nomic-embed-text
-    ```
-4.  **Limpe o Cache:** Garanta que a base vetorial seja recriada com os arquivos `.txt` novos.
-    ```bash
-    rm -rf faiss_index
-    ```
+Para clonar e executar este projeto em sua máquina:
 
-### 2. Inicie a API Python (O Cérebro)
+### 1. Pré-requisitos
+* Python 3.11+
+* Conta no Google AI Studio (API Key)
+* Token de Bot do Telegram (@BotFather)
 
-Mantenha esta janela do terminal rodando o tempo todo. Ele irá ler os arquivos `.txt` e criar a memória FAISS:
+### 2. Instalação
 ```bash
-uvicorn api:app --reload
+# Clone o repositório
+git clone https://github.com/DevM3lo/DelegaciaBot.git
+cd DelegaciaBot
+
+# Crie e ative o ambiente virtual
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+
+# Instale as dependências
+pip install -r requirements.txt
